@@ -40,7 +40,7 @@ def _run_detection(detector_model, image_arr, detection_width):
 @click.command()
 @click.option("--image_path", type=str, required=True)
 @click.option("--config_path", type=str, default="configs/retinaface_res50.yaml")
-@click.option("--export_path", type=str, default="saved_models/retinaface")
+@click.option("--export_path", type=str, default="saved_models/retinaface-res50")
 @click.option("--ckpt_path", type=str, default="checkpoints/retinaface_res50/ckpt-81")
 @click.option("--score_thres", type=float, default=0.5)
 @click.option("--iou_thres", type=float, default=0.4)
