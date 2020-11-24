@@ -9,3 +9,5 @@ data/*/**/*.jpg
 data/widerface/**/*.txt
 widerface_evaluate/*
 results/*
+saved_models
+tests/data
