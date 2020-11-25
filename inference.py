@@ -8,13 +8,13 @@ import cv2
 from modules.utils import set_memory_growth, load_yaml, draw_bbox_landm, pad_input_image, recover_pad_output
 
 
-def export(ckpt_path, output_path, iou_thres, score_thres, config):
-    from modules.models import RetinaFaceModel
+def export(ckpt_path, output_path, config):
+    from modules.models import RetinaFaceModel, RetinaFaceModel_
 
     """
     Export a training checkpoint to a tensorflow savedModel.
     """
-    model = RetinaFaceModel(config, training=False, iou_th=iou_thres, score_th=score_thres)
+    model = RetinaFaceModel_(config, training=False)
 
     # load checkpoint
     checkpoint = tf.train.Checkpoint(model=model)
@@ -23,7 +23,7 @@ def export(ckpt_path, output_path, iou_thres, score_thres, config):
     tf.saved_model.save(model, output_path)
 
 
-def _run_detection(detector_model, image_arr, detection_width):
+def _run_detection(detector_model, image_arr, score_thres, iou_thres, detection_width):
     img = np.float32(image_arr.copy())
 
     if detection_width > 0.0:
@@ -31,7 +31,13 @@ def _run_detection(detector_model, image_arr, detection_width):
         img = cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR,)
 
     img, pad_params = pad_input_image(img, max_steps=32)
-    outputs = detector_model(np.expand_dims(img, axis=0)).numpy()
+    outputs = detector_model(
+        [
+            np.expand_dims(img, axis=0),
+            tf.constant([score_thres], dtype=tf.float32),
+            tf.constant([iou_thres], dtype=tf.float32),
+        ]
+    ).numpy()
     outputs = recover_pad_output(outputs, pad_params)
 
     return outputs
@@ -69,7 +75,7 @@ def main(
     img_raw = cv2.imread(image_path)
     img_rgb = cv2.cvtColor(img_raw, cv2.COLOR_BGR2RGB)
     img_height_raw, img_width_raw, _ = img_rgb.shape
-    outputs = _run_detection(loaded_model, img_rgb, detection_width)
+    outputs = _run_detection(loaded_model, img_rgb, score_thres, iou_thres, detection_width)
 
     # draw and save results
     result_save_path = Path(result_save_path)

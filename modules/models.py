@@ -270,3 +270,68 @@ def RetinaFaceModel(cfg, training=False, iou_th=0.4, score_th=0.02, name="Retina
         out = tf.gather(decode_preds, selected_indices)
 
     return Model(inputs, out, name=name)
+
+
+def RetinaFaceModel_(cfg, training=False, name="RetinaFaceModel"):
+    """Retina Face Model"""
+    input_size = cfg["input_size"] if training else None
+    wd = cfg["weights_decay"]
+    out_ch = cfg["out_channel"]
+    num_anchor = len(cfg["min_sizes"][0])
+    backbone_type = cfg["backbone_type"]
+
+    # define model
+    x = inputs = Input([input_size, input_size, 3], name="input_image")
+    score_thres = Input(shape=(), batch_size=1, name="score_thres", dtype=tf.float32)
+    iou_thres = Input(shape=(), batch_size=1, name="iou_thres", dtype=tf.float32)
+
+    score_thres_scalar = tf.squeeze(score_thres, axis=0)
+    iou_thres_scalar = tf.squeeze(iou_thres, axis=0)
+
+    x = Backbone(backbone_type=backbone_type)(x)
+
+    fpn = FPN(out_ch=out_ch, wd=wd)(x)
+
+    features = [SSH(out_ch=out_ch, wd=wd, name=f"SSH_{i}")(f) for i, f in enumerate(fpn)]
+
+    bbox_regressions = tf.concat(
+        [BboxHead(num_anchor, wd=wd, name=f"BboxHead_{i}")(f) for i, f in enumerate(features)], axis=1
+    )
+    landm_regressions = tf.concat(
+        [LandmarkHead(num_anchor, wd=wd, name=f"LandmarkHead_{i}")(f) for i, f in enumerate(features)], axis=1
+    )
+    classifications = tf.concat(
+        [ClassHead(num_anchor, wd=wd, name=f"ClassHead_{i}")(f) for i, f in enumerate(features)], axis=1
+    )
+
+    classifications = tf.keras.layers.Softmax(axis=-1)(classifications)
+
+    if training:
+        out = (bbox_regressions, landm_regressions, classifications)
+    else:
+        # only for batch size 1
+        preds = tf.concat(  # [bboxes, landms, landms_valid, conf]
+            [
+                bbox_regressions[0],
+                landm_regressions[0],
+                tf.ones_like(classifications[0, :, 0][..., tf.newaxis]),
+                classifications[0, :, 1][..., tf.newaxis],
+            ],
+            1,
+        )
+        priors = prior_box_tf(
+            (tf.shape(inputs)[1], tf.shape(inputs)[2]), cfg["min_sizes"], cfg["steps"], cfg["clip"]
+        )
+        decode_preds = decode_tf(preds, priors, cfg["variances"])
+
+        selected_indices = tf.image.non_max_suppression(
+            boxes=decode_preds[:, :4],
+            scores=decode_preds[:, -1],
+            max_output_size=tf.shape(decode_preds)[0],
+            iou_threshold=iou_thres_scalar,
+            score_threshold=score_thres_scalar,
+        )
+
+        out = tf.gather(decode_preds, selected_indices)
+
+    return Model(inputs=[inputs, score_thres, iou_thres], outputs=[out], name=name)
