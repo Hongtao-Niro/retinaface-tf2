@@ -6,21 +6,7 @@ import numpy as np
 import cv2
 
 from modules.utils import set_memory_growth, load_yaml, draw_bbox_landm, pad_input_image, recover_pad_output
-
-
-def export(ckpt_path, output_path, config):
-    from modules.models import RetinaFaceModel, RetinaFaceModel_
-
-    """
-    Export a training checkpoint to a tensorflow savedModel.
-    """
-    model = RetinaFaceModel_(config, training=False)
-
-    # load checkpoint
-    checkpoint = tf.train.Checkpoint(model=model)
-    checkpoint.restore(ckpt_path)
-
-    tf.saved_model.save(model, output_path)
+from export import export_to_saved_model
 
 
 def _run_detection(detector_model, image_arr, score_thres, iou_thres, detection_width):
@@ -46,7 +32,7 @@ def _run_detection(detector_model, image_arr, score_thres, iou_thres, detection_
 @click.command()
 @click.option("--image_path", type=str, required=True)
 @click.option("--config_path", type=str, default="configs/retinaface_res50.yaml")
-@click.option("--export_path", type=str, default="saved_models/retinaface-res50")
+@click.option("--export_path", type=str, default="saved_models/retinaface_res50")
 @click.option("--ckpt_path", type=str, default="checkpoints/retinaface_res50/ckpt-81")
 @click.option("--score_thres", type=float, default=0.5)
 @click.option("--iou_thres", type=float, default=0.4)
@@ -65,7 +51,7 @@ def main(
     config = load_yaml(config_path)
 
     if not Path(export_path).joinpath("saved_model.pb").exists() and ckpt_path is not None:
-        export(ckpt_path, export_path, iou_thres, score_thres, config)
+        export_to_saved_model(ckpt_path, export_path, config)
     elif not Path(export_path).joinpath("saved_model.pb").exists() and ckpt_path is None:
         raise ValueError(f"Must provide a checkpoint to export model.")
 

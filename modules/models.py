@@ -272,9 +272,15 @@ def RetinaFaceModel(cfg, training=False, iou_th=0.4, score_th=0.02, name="Retina
     return Model(inputs, out, name=name)
 
 
-def RetinaFaceModel_(cfg, training=False, name="RetinaFaceModel"):
+def RetinaFaceModel_(cfg, training=False, name="RetinaFaceModel", image_size: int = None):
     """Retina Face Model"""
-    input_size = cfg["input_size"] if training else None
+    if image_size is not None:
+        input_size = image_size
+    elif training:
+        input_size = cfg["input_size"]
+    else:
+        input_size = None
+
     wd = cfg["weights_decay"]
     out_ch = cfg["out_channel"]
     num_anchor = len(cfg["min_sizes"][0])
