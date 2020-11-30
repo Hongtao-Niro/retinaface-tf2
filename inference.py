@@ -5,7 +5,7 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-from modules.utils import set_memory_growth, load_yaml, draw_bbox_landm, pad_input_image, recover_pad_output
+from modules.utils import load_yaml, draw_bbox_landm, pad_input_image, recover_pad_output
 from export import export_to_saved_model
 
 
@@ -32,7 +32,7 @@ def _run_detection(detector_model, image_arr, score_thres, iou_thres, detection_
 @click.command()
 @click.option("--image_path", type=str, required=True)
 @click.option("--config_path", type=str, default="configs/retinaface_res50.yaml")
-@click.option("--export_path", type=str, default="saved_models/retinaface_res50")
+@click.option("--export_path", type=str, default="saved_models/retinaface_res50_end2end")
 @click.option("--ckpt_path", type=str, default="checkpoints/retinaface_res50/ckpt-81")
 @click.option("--score_thres", type=float, default=0.5)
 @click.option("--iou_thres", type=float, default=0.4)
@@ -71,7 +71,7 @@ def main(
         draw_bbox_landm(
             img_raw, outputs[prior_index], img_height_raw, img_width_raw, draw_score=True, draw_lm=True
         )
-        cv2.imwrite(str(save_img_path), img_raw)
+    cv2.imwrite(str(save_img_path), img_raw)
     print(f"Results saved at {save_img_path}")
 
 
