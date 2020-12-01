@@ -16,7 +16,7 @@ def _run_detection(detector_model, image_arr, score_thres, iou_thres, detection_
         scale = float(detection_width) / image_arr.shape[1]
         img = cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR,)
 
-    img, pad_params = pad_input_image(img, max_steps=32)
+    img, pad_params = pad_input_image(img, padded_size=detection_width)
     outputs = detector_model(
         [
             np.expand_dims(img, axis=0),

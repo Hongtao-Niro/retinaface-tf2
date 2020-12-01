@@ -7,7 +7,7 @@ import tensorflow as tf
 import time
 
 from modules.models import RetinaFaceModel
-from modules.utils import set_memory_growth, load_yaml, draw_bbox_landm, pad_input_image, recover_pad_output
+from modules.utils import set_memory_growth, load_yaml, draw_bbox_landm, pad_input_image_, recover_pad_output
 
 
 flags.DEFINE_string("cfg_path", "./configs/retinaface_res50.yaml", "config file path")
@@ -66,7 +66,7 @@ def main(_argv):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         # pad input image to avoid unmatched shape problem
-        img, pad_params = pad_input_image(img, max_steps=max(cfg["steps"]))
+        img, pad_params = pad_input_image_(img, max_steps=max(cfg["steps"]))
 
         # run model
         outputs = model(img[np.newaxis, ...]).numpy()
@@ -103,7 +103,7 @@ def main(_argv):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             # pad input image to avoid unmatched shape problem
-            img, pad_params = pad_input_image(img, max_steps=max(cfg["steps"]))
+            img, pad_params = pad_input_image_(img, max_steps=max(cfg["steps"]))
 
             # run model
             outputs = model(img[np.newaxis, ...]).numpy()

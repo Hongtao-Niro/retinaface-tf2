@@ -112,7 +112,7 @@ class ProgressBar(object):
 ###############################################################################
 #   Testing                                                                   #
 ###############################################################################
-def pad_input_image(img, max_steps):
+def pad_input_image_(img, max_steps):
     """pad image to suitable shape"""
     img_h, img_w, _ = img.shape
 
@@ -129,6 +129,19 @@ def pad_input_image(img, max_steps):
     pad_params = (img_h, img_w, img_pad_h, img_pad_w)
 
     return img, pad_params
+
+
+def pad_input_image(img, padded_size: int = 320):
+    """pad image to suitable shape"""
+    img_h_original, img_w_original, _ = img.shape
+    scale = float(padded_size) / max(img_h_original, img_w_original)
+    img = cv2.resize(img, None, fx=scale, fy=scale)
+    img_h, img_w, _ = img.shape
+
+    img_tensor = tf.image.pad_to_bounding_box(img, 0, 0, padded_size, padded_size)
+    pad_params = (img_h, img_w, padded_size - img_h, padded_size - img_w)
+
+    return img_tensor, pad_params
 
 
 def recover_pad_output(outputs, pad_params):

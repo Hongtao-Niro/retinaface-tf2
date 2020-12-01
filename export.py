@@ -2,7 +2,7 @@ from pathlib import Path
 
 import tensorflow as tf
 
-from modules.utils import load_yaml, pad_input_image, recover_pad_output
+from modules.utils import load_yaml, recover_pad_output
 
 
 def export_to_saved_model(ckpt_path, output_path, config, image_size: int = None):
