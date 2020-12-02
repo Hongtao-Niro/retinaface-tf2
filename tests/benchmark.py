@@ -8,7 +8,7 @@ from modules.utils import resize_and_pad_input_image, recover_pad_output
 WARMUP_ITERATIONS = 10
 gpus = tf.config.experimental.list_physical_devices("GPU")
 for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpus[0], True)
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 @pytest.fixture(params=["mobile-v2", "res50"])
