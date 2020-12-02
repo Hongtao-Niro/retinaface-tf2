@@ -5,21 +5,23 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-from modules.utils import load_yaml, draw_bbox_landm, pad_input_image, recover_pad_output
+from modules.utils import load_yaml, draw_bbox_landm, resize_and_pad_input_image, recover_pad_output
 from export import export_to_saved_model
 
 
 def _run_detection(detector_model, image_arr, score_thres, iou_thres, detection_width):
-    img = np.float32(image_arr.copy())
+    image_arr = np.float32(image_arr)
 
-    if detection_width > 0.0:
-        scale = float(detection_width) / image_arr.shape[1]
-        img = cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR,)
-
-    img, pad_params = pad_input_image(img, padded_size=detection_width)
+    image_arr, pad_params = resize_and_pad_input_image(
+        image_arr,
+        padded_width=detection_width,
+        padded_height=detection_width,
+        max_steps=32,
+        keep_aspect_ratio=True,
+    )
     outputs = detector_model(
         [
-            np.expand_dims(img, axis=0),
+            np.expand_dims(image_arr, axis=0),
             tf.constant([score_thres], dtype=tf.float32),
             tf.constant([iou_thres], dtype=tf.float32),
         ]

@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-from modules.utils import pad_input_image, recover_pad_output
+from modules.utils import resize_and_pad_input_image, recover_pad_output
 
 WARMUP_ITERATIONS = 10
 gpus = tf.config.experimental.list_physical_devices("GPU")
@@ -33,11 +33,9 @@ def single_test_image():
 def _run_detection(model, image_arr, score_thres, iou_thres, detection_width):
     img = np.float32(image_arr.copy())
 
-    if detection_width > 0.0:
-        scale = float(detection_width) / image_arr.shape[1]
-        img = cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR,)
-
-    img, pad_params = pad_input_image(img, padded_size=detection_width)
+    img, pad_params = resize_and_pad_input_image(
+        img, padded_height=detection_width, padded_width=detection_width, max_steps=32, keep_aspect_ratio=True
+    )
     outputs = model(
         [
             np.expand_dims(img, axis=0),

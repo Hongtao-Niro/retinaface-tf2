@@ -131,15 +131,36 @@ def pad_input_image_(img, max_steps):
     return img, pad_params
 
 
-def pad_input_image(img, padded_size: int = 320):
+def resize_and_pad_input_image(
+    img,
+    padded_height: int = 320,
+    padded_width: int = 320,
+    max_steps: int = 32,
+    keep_aspect_ratio: bool = False,
+):
     """pad image to suitable shape"""
     img_h_original, img_w_original, _ = img.shape
-    scale = float(padded_size) / max(img_h_original, img_w_original)
-    img = cv2.resize(img, None, fx=scale, fy=scale)
+    if padded_height > 0 and padded_width > 0:
+        scale = min(float(padded_height) / img_h_original, float(padded_width) / img_w_original)
+        img = cv2.resize(img, None, fx=scale, fy=scale)
+
     img_h, img_w, _ = img.shape
 
-    img_tensor = tf.image.pad_to_bounding_box(img, 0, 0, padded_size, padded_size)
-    pad_params = (img_h, img_w, padded_size - img_h, padded_size - img_w)
+    if keep_aspect_ratio:
+        img_pad_h = 0
+        if img_h % max_steps > 0:
+            img_pad_h = max_steps - img_h % max_steps
+
+        img_pad_w = 0
+        if img_w % max_steps > 0:
+            img_pad_w = max_steps - img_w % max_steps
+
+        img_tensor = tf.image.pad_to_bounding_box(img, 0, 0, img_pad_h + img_h, img_pad_w + img_w)
+        pad_params = (img_h, img_w, img_pad_h, img_pad_w)
+
+    else:
+        img_tensor = tf.image.pad_to_bounding_box(img, 0, 0, padded_height, padded_width)
+        pad_params = (img_h, img_w, padded_height - img_h, padded_width - img_w)
 
     return img_tensor, pad_params
 
