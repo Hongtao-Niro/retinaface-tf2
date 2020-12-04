@@ -38,7 +38,7 @@ def _run_detection(model, image_arr, score_thres, iou_thres, detection_width):
     )
     outputs = model(
         [
-            np.expand_dims(img, axis=0),
+            tf.expand_dims(img, axis=0),
             tf.constant([score_thres], dtype=tf.float32),
             tf.constant([iou_thres], dtype=tf.float32),
         ]
