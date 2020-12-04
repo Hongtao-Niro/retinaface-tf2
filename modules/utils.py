@@ -162,7 +162,7 @@ def resize_and_pad_input_image(
         img_tensor = tf.image.pad_to_bounding_box(img, 0, 0, padded_height, padded_width)
         pad_params = (img_h, img_w, padded_height - img_h, padded_width - img_w)
 
-    return img_tensor, pad_params
+    return tf.cast(img_tensor, tf.float32), pad_params
 
 
 def recover_pad_output(outputs, pad_params):

@@ -21,7 +21,7 @@ def _run_detection(detector_model, image_arr, score_thres, iou_thres, detection_
     )
     outputs = detector_model(
         [
-            np.expand_dims(image_arr, axis=0),
+            tf.expand_dims(image_arr, axis=0),
             tf.constant([score_thres], dtype=tf.float32),
             tf.constant([iou_thres], dtype=tf.float32),
         ]
